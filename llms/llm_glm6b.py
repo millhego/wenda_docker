@@ -1,7 +1,7 @@
-from plugins.common import settings
+from plugins.common import settings, printx, print_cuda_state
 import json
 chatglm3_mode =settings.llm.path.lower().find("chatglm3-6b") > -1
-print('chatglm3_mode',chatglm3_mode)
+printx('chatglm3_mode',chatglm3_mode)
 def chat_init(history):
     history_formatted = []
     if history is not None:
@@ -64,7 +64,7 @@ def load_model():
     num_trans_layers = 28
     strategy = ('->'.join([x.strip() for x in settings.llm.strategy.split('->')])).replace('->', ' -> ')
     s = [x.strip().split(' ') for x in strategy.split('->')]
-    print(s)
+    printx(s)
     if len(s)>1:
         from accelerate import dispatch_model
         start_device = int(s[0][0].split(':')[1])
@@ -98,13 +98,15 @@ def load_model():
                 device_map[f'transformer.layers.{i}'] = n[i]
 
     device, precision = s[0][0], s[0][1]
-    
+    if device == "cuda":
+        print_cuda_state()
+
     tokenizer = AutoTokenizer.from_pretrained(
         settings.llm.path, local_files_only=True, trust_remote_code=True,revision="v1.1.0")
     model = AutoModel.from_pretrained(
         settings.llm.path, local_files_only=True, trust_remote_code=True, revision="v1.1.0")
     if not (settings.llm.lora == '' or settings.llm.lora == None):
-        print('Lora模型地址', settings.llm.lora)
+        printx('Lora模型地址', settings.llm.lora)
         from peft import PeftModel
         model = PeftModel.from_pretrained(model, settings.llm.lora,adapter_name=settings.llm.lora)
         
@@ -123,7 +125,7 @@ def load_model():
         pass
     else:
         # 如果是其他设备，报错并退出程序
-        print('Error: 不受支持的设备')
+        printx('Error: 不受支持的设备')
         exit()
     
     
@@ -152,7 +154,7 @@ def load_model():
         model = model.float()
     else:
         # 如果是其他精度，报错并退出程序
-        print('Error: 不受支持的精度')
+        printx('Error: 不受支持的精度')
         exit()
     if len(s)>1:
         model = dispatch_model(model, device_map=device_map)

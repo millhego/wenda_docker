@@ -51,8 +51,8 @@ tokenizer = None
 
 def load_model():
     LLM.load_model()
-    torch.cuda.empty_cache()
     success_print("模型加载完成")
+    torch.cuda.empty_cache()
 
 
 if __name__ == '__main__':
