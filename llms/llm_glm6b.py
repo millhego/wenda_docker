@@ -30,7 +30,7 @@ def chat_init(history):
 def chat_one(prompt, history_formatted, max_length, top_p, temperature, data):
     yield str(len(prompt))+'字正在计算'
     
-    if len(history_formatted)>0 and history_formatted[0]['role']=="system":
+    if len(history_formatted)>0 and (not isinstance(history_formatted, tuple) or history_formatted[0]['role']=="system"):
         if prompt.startswith("observation!"):
             prompt = prompt.replace("observation!", "")
             response, history = model.chat(tokenizer, prompt, history_formatted, role="observation",
@@ -39,7 +39,7 @@ def chat_one(prompt, history_formatted, max_length, top_p, temperature, data):
         else:
             response, history = model.chat(tokenizer, prompt, history_formatted,
                                                 max_length=max_length, top_p=top_p, temperature=temperature)
-            yield json.dumps(response)
+            yield json.dumps(response, ensure_ascii=False)
     else:
         for response, history in model.stream_chat(tokenizer, prompt, history_formatted,
                                                 max_length=max_length, top_p=top_p, temperature=temperature):
