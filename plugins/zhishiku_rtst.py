@@ -3,6 +3,9 @@ from langchain.embeddings import HuggingFaceEmbeddings
 import sentence_transformers
 import numpy as np
 import re,os
+
+from langchain_core.embeddings import Embeddings
+
 from plugins.common import settings,allowCROS
 from plugins.common import error_helper 
 from plugins.common import success_print 
@@ -59,7 +62,7 @@ def get_doc(id,score,step,memory_name):
     return {'title': title,'content':re.sub(r'\n+', "\n", final_content),"score":int(score)}
 def find(s,step = 0,memory_name="default"):
     try:
-        embedding = get_vectorstore(memory_name).embedding_function(s)
+        embedding = get_embedding_function(memory_name, s)
         scores, indices = vectorstores[memory_name].index.search(np.array([embedding], dtype=np.float32), int(cunnrent_setting.count))
         docs = []
         for j, i in enumerate(indices[0]):
@@ -72,6 +75,20 @@ def find(s,step = 0,memory_name="default"):
     except Exception as e:
         print(e)
         return []
+
+
+def get_embedding_function(memory_name, s):
+    # fix bug: FAISS.load_local method has error: cls(embedding_function=embedding, .....)
+    # They fixed the bug, but it was not fully fixed.
+    # bug in langchain(0.0.348) faiss.py:1064
+    vectorStore = get_vectorstore(memory_name)
+    if isinstance(vectorStore.embedding_function, Embeddings):
+        embedding = vectorStore.embedding_function.embed_query(s)
+    else:
+        embedding = vectorStore.embedding_function(s)
+    return embedding
+
+
 model_path=cunnrent_setting.model_path
 
 try:
