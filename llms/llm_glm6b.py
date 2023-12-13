@@ -125,6 +125,10 @@ def load_model():
         # 如果是其他设备，报错并退出程序
         print('Error: 不受支持的设备')
         exit()
+    
+    
+    if device == 'cuda':
+        model = model.cuda()
     # 根据精度执行不同的操作
     if precision == 'fp16':
         # 如果是fp16，把模型转化为半精度
@@ -138,8 +142,6 @@ def load_model():
         bits = int(precision[5:])
         # 调用quantize方法，传入精度参数
         model = model.quantize(bits)
-        if device == 'cuda':
-            model = model.cuda()
         model = model.half()
     elif precision.startswith('fp32i'):
         # 如果是fp32i开头，把模型转化为指定的精度
@@ -147,8 +149,6 @@ def load_model():
         bits = int(precision[5:])
         # 调用quantize方法，传入精度参数
         model = model.quantize(bits)
-        if device == 'cuda':
-            model = model.cuda()
         model = model.float()
     else:
         # 如果是其他精度，报错并退出程序
