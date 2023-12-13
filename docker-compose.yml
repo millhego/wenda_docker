@@ -1,0 +1,33 @@
+version: '3'
+services:
+  app:
+    runtime: nvidia
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    volumes:
+      - .:/app  # 挂载本地项目到容器内的/app目录
+      - /usr/local/cuda:/usr/local/cuda
+      - /usr/local/cuda-12.1:/usr/local/cuda-12.1
+      - /dev/nvidia0:/dev/nvidia0
+      - /usr/local:/usr/local #
+    ports:
+      - "17860:17860"
+    command: >
+      /bin/bash -c "
+        python wenda.py -t glm6b"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CUDA_VISIBLE_DEVICES=0
+    cpu_shares: 1024
+    mem_limit: 0
+    network_mode: host
+
+  # 可以添加其他服务定义，比如数据库、缓存等
+  # db:
+  #   image: some-database-image
+  #   ...
+
+# 定义其他网络、卷等可以放在这里
+
