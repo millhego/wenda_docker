@@ -8,7 +8,9 @@ from langchain_core.embeddings import Embeddings
 
 from plugins.common import settings,allowCROS
 from plugins.common import error_helper 
-from plugins.common import success_print 
+from plugins.common import success_print
+from plugins.utils import deduplicate_by_key
+
 if settings.librarys.rtst.backend=="Annoy":
     from langchain.vectorstores.annoy import Annoy as Vectorstore
 else:
@@ -70,7 +72,10 @@ def find(s,step = 0,memory_name="default"):
                 continue
             if scores[0][j]>260:continue
             docs.append(get_doc(i,scores[0][j],step,memory_name))
-
+        # 去重
+        docs.sort(key=lambda x: x['score'], reverse=True)
+        docs = deduplicate_by_key(docs, "content", memory_name)
+        # 排序
         return docs
     except Exception as e:
         print(e)
